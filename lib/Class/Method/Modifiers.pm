@@ -91,7 +91,12 @@ sub install_modifier {
             $generated .= "sub $name {";
 
             # before is easy, it doesn't affect the return value(s)
-            $generated .= '$_->(@_) for @$before;' if @$before;
+            if (@$before) {
+                $generated .= '
+                foreach my $meth (@$before) {
+                    $meth->(@_);
+                }';
+            }
 
             if (@$after) {
                 $generated .= '
@@ -106,7 +111,9 @@ sub install_modifier {
                         $$wrapped->(@_);
                     }
 
-                    $_->(@_) for @$after;
+                    foreach my $meth (@$after) {
+                        $meth->(@_);
+                    }
 
                     return wantarray ? @ret : $ret[0];
                 ';
